@@ -318,9 +318,18 @@ namespace Awake
                 {
                     try
                     {
-                        DateTimeOffset expirationDateTime = DateTimeOffset.Parse(expireAt, CultureInfo.CurrentCulture);
-                        Logger.LogInfo($"Operating in thread ID {Environment.CurrentManagedThreadId}.");
-                        Manager.SetExpirableKeepAwake(expirationDateTime, displayOn);
+                        if (DateTimeOffset.TryParse(expireAt, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTimeOffset expirationDateTime))
+                        {
+                            bool isTimeOnly = !expireAt.Contains("/") && !expireAt.Contains("-");
+                            if (isTimeOnly && expirationDateTime <= DateTimeOffset.Now)
+                            {
+                                expirationDateTime = expirationDateTime.AddDays(1);
+                                Logger.LogInfo($"Time-only --expire-at value in the past. Adjusted to: {expirationDateTime}");
+                            }
+
+                            Logger.LogInfo($"Operating in thread ID {Environment.CurrentManagedThreadId}.");
+                            Manager.SetExpirableKeepAwake(expirationDateTime, displayOn);
+                        }  
                     }
                     catch (Exception ex)
                     {

@@ -318,22 +318,13 @@ namespace Awake
                 {
                     try
                     {
-                        if (DateTimeOffset.TryParse(expireAt, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTimeOffset expirationDateTime))
-                        {
-                            bool isTimeOnly = !expireAt.Contains("/") && !expireAt.Contains("-");
-                            if (isTimeOnly && expirationDateTime <= DateTimeOffset.Now)
-                            {
-                                expirationDateTime = expirationDateTime.AddDays(1);
-                                Logger.LogInfo($"Time-only --expire-at value in the past. Adjusted to: {expirationDateTime}");
-                            }
-
-                            Logger.LogInfo($"Operating in thread ID {Environment.CurrentManagedThreadId}.");
-                            Manager.SetExpirableKeepAwake(expirationDateTime, displayOn);
-                        }
+                        DateTimeOffset expirationDateTime = ParseExpiryTime(expireAt);
+                        Logger.LogInfo($"Operating in thread ID {Environment.CurrentManagedThreadId}.");
+                        Manager.SetExpirableKeepAwake(expirationDateTime, displayOn);
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError($"Could not parse date string {expireAt} into a DateTimeOffset object.");
+                        Logger.LogError($"Could not parse date string {expireAt} into a DateTimeOffset or TimeOnly object.");
                         Logger.LogError(ex.Message);
                     }
                 }

@@ -329,7 +329,7 @@ namespace Awake
 
                             Logger.LogInfo($"Operating in thread ID {Environment.CurrentManagedThreadId}.");
                             Manager.SetExpirableKeepAwake(expirationDateTime, displayOn);
-                        }  
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -352,7 +352,27 @@ namespace Awake
                 }
             }
         }
+        public static DateTimeOffset ParseExpiryTime(string expiryString)
+        {
+            if (TimeOnly.TryParse(expiryString, CultureInfo.CurrentCulture, out var timeOnly))
+            {
+                var now = DateTimeOffset.Now;
+                var candidate = new DateTimeOffset(now.Year, now.Month, now.Day, timeOnly.Hour, timeOnly.Minute, timeOnly.Second, now.Offset);
+                if (candidate <= now)
+                {
+                    candidate = candidate.AddDays(1);
+                    Logger.LogInfo($"Time-only --expire-at value in the past. Adjusted to: {candidate}");
+                }
+                return candidate;
+            }
 
+            if (DateTimeOffset.TryParse(expiryString, CultureInfo.CurrentCulture, DateTimeStyles.None, out var result))
+            {
+                return result;
+            }
+
+            throw new FormatException($"Could not parse date string {expiryString} into a DateTimeOffset or TimeOnly object.");
+        }
         private static void AllocateLocalConsole()
         {
             Manager.AllocateConsole();

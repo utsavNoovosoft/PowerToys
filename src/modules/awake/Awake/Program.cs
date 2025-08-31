@@ -343,12 +343,14 @@ namespace Awake
                 }
             }
         }
+
         public static DateTimeOffset ParseExpiryTime(string expiryString)
         {
             if (TimeOnly.TryParse(expiryString, CultureInfo.CurrentCulture, out var timeOnly))
             {
                 var now = DateTimeOffset.Now;
-                var candidate = new DateTimeOffset(now.Year, now.Month, now.Day, timeOnly.Hour, timeOnly.Minute, timeOnly.Second, now.Offset);
+                var today = DateOnly.FromDateTime(now.Date);
+                var candidate = new DateTimeOffset(today.ToDateTime(timeOnly), now.Offset);
                 if (candidate <= now)
                 {
                     candidate = candidate.AddDays(1);
@@ -357,13 +359,9 @@ namespace Awake
                 return candidate;
             }
 
-            if (DateTimeOffset.TryParse(expiryString, CultureInfo.CurrentCulture, DateTimeStyles.None, out var result))
-            {
-                return result;
-            }
-
-            throw new FormatException($"Could not parse date string {expiryString} into a DateTimeOffset or TimeOnly object.");
+            return DateTimeOffset.Parse(expiryString, CultureInfo.CurrentCulture);
         }
+
         private static void AllocateLocalConsole()
         {
             Manager.AllocateConsole();

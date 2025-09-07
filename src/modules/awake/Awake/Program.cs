@@ -346,11 +346,12 @@ namespace Awake
 
         public static DateTimeOffset ParseExpiryTime(string expiryString)
         {
-            if (TimeOnly.TryParse(expiryString, CultureInfo.CurrentCulture, out var timeOnly))
+            var timeOnlyStyle = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault;
+            if (DateTime.TryParse(expiryString, CultureInfo.CurrentCulture, timeOnlyStyle, out var dt))
             {
                 var now = DateTimeOffset.Now;
                 var today = DateOnly.FromDateTime(now.Date);
-                var candidate = new DateTimeOffset(today.ToDateTime(timeOnly), now.Offset);
+                var candidate = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(dt.TimeOfDay)), now.Offset);
                 if (candidate <= now)
                 {
                     candidate = candidate.AddDays(1);
@@ -359,7 +360,7 @@ namespace Awake
                 return candidate;
             }
 
-            return DateTimeOffset.Parse(expiryString, CultureInfo.CurrentCulture);
+            return DateTimeOffset.Parse(expiryString, CultureInfo.CurrentCulture, timeOnlyStyle);
         }
 
         private static void AllocateLocalConsole()
